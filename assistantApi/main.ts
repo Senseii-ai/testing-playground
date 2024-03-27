@@ -79,6 +79,12 @@ const currentWeatherFunctionDefinition = (): FunctionDefinition => {
   return currentWeatherFunctionSchema;
 };
 
+// creates a new empty thread and returns it's id
+const createNewThread = async()=>{
+  const thread = await client.beta.threads.create()
+  return thread.id
+}
+
 // creates a new assistant (this is just a sample), I used this function to create the core assistant, then hard coded the assistant id.
 const createNewAssistant = async () => {
   const assistant = await client.beta.assistants.create({
@@ -95,13 +101,21 @@ const createNewAssistant = async () => {
 };
 
 // returns a hard coded id of core assistant
-const getCoreAssistantId = () => {
-  return "asst_zTRe5WTuBJHRRMkIiG4gvgiI";
+const getCoreAssistantId = (): string => {
+  const coreAssistantId= process.env.ASSISTANT_ID
+  if (coreAssistantId == undefined) {
+    throw new Error("Thread id not provided");
+  }
+  return coreAssistantId 
 };
 
 // returns a hard coded id of the thread
 const getThreadId = (): string => {
-  return "thread_0wb4iwsEBGovrNGak5QXENzB";
+  const threadId = process.env.THREAD_ID
+  if (threadId == undefined) {
+    throw new Error("Thread id not provided");
+  }
+  return threadId;
 };
 
 // create a new message in the thread
@@ -282,7 +296,6 @@ const addToolToAssistant = async (tool: FunctionDefinition) => {
 
 // getAssistant retrieves the assistant with the given id
 const getAssistant = async () => {
-  // const assistantBackup = "assistantId asst_zTRe5WTuBJHRRMkIiG4gvgiI";
   const assistant = await client.beta.assistants.retrieve(getCoreAssistantId());
   return assistant;
 };
