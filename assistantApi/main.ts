@@ -11,6 +11,7 @@ import {
 import { Thread } from "openai/resources/beta/threads/threads";
 import { FunctionDefinition } from "openai/resources";
 import { AssistantTool } from "openai/resources/beta/assistants/assistants";
+import chalk from "chalk";
 
 dotenv.config();
 
@@ -22,6 +23,261 @@ const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 // 2. Greet the user with a specific message
 // 3. Greet the user with a specific tone
 // etc.
+
+interface IBasicInformation {
+  age: number;
+  weight: number;
+  height: number;
+  gender: string;
+}
+
+interface ILifeStyle {
+  dailyRoutine: "sedenatry" | "light" | "moderate" | "heavy" | "very heavy";
+  exerciseRoutine?: {
+    exerciseType: "cardio" | "strength" | "flexibility" | "balance" | "none";
+    frequency: "daily" | "weekly" | "monthly";
+  };
+}
+
+interface IDietPreferences {
+  preference:
+    | "vegetarian"
+    | "non-vegetarian"
+    | "vegan"
+    | "pescatarian"
+    | "omnivore"
+    | "ketogenic"
+    | "paleo";
+  allergies: string[];
+  intolerances: string[];
+  dislikedFood?: string[];
+  favouriteFood?: string[];
+}
+
+interface IHealthGoals {
+  weightGoal?: "gain" | "loss" | "maintain";
+  specificNutritionGoal: string;
+  medicalConditions: string[];
+}
+
+interface IEatingHabits {
+  mealsPerDay: number;
+  mealComplexity: "simple" | "moderate" | "complex";
+  cookingTime:
+    | "less than 30 minutes"
+    | "30-60 minutes"
+    | "more than 60 minutes";
+}
+
+interface IConstraints {
+  financial: {
+    budget: number;
+    budgetType: "daily" | "weekly" | "monthly";
+  };
+  geographical: {
+    location: string;
+  };
+}
+
+// this interface will be used to model database collections.
+interface IUserPreferences {
+  type: "userPreferences";
+  basicInformation: IBasicInformation;
+  lifeStyle: ILifeStyle;
+  dietPreferences: IDietPreferences;
+  healthGoals: IHealthGoals;
+  eatingHabits: IEatingHabits;
+  constraints: IConstraints;
+}
+
+// create nutrition plan
+
+// export const CreateNutritionPlan = async (
+//   client: OpenAI,
+//   userPreferences: string,
+//   userGoal: string,
+//   threadId: string
+// ) => {
+//   // pass
+// };
+
+// this function needs to generate an output.
+export const createNutritionPlan = async (
+  basicInformation: IBasicInformation,
+  lifeStyle: ILifeStyle,
+  dietPreferences: IDietPreferences,
+  healthGoals: IHealthGoals,
+  eatingHabits: IEatingHabits,
+  constraints: IConstraints
+) => {
+  // call the nutrition assistant to create the workout plan
+  console.log(chalk.bgGreen("THIS IS THE WOROUT PLAN"));
+  console.log(chalk.red("This is the basic information", basicInformation));
+  console.log(chalk.red("This is the life style", lifeStyle));
+  console.log(chalk.red("This is the diet preferences", dietPreferences));
+  console.log(chalk.red("This is the health goals", healthGoals));
+  console.log(chalk.red("This is the eating habits", eatingHabits));
+  console.log(chalk.red("This is the constraints", constraints));
+  return "Testing nutrition plan generation";
+};
+
+export const createNutritionPlanSchema = () => {
+  const createNutritionPlanSchema: FunctionDefinition = {
+    name: "create_nutrition_plan",
+    description:
+      `Creates a nutrition plan for the user when core assistant has all the necessary information needed to create the diet plan.
+      List of information:
+      - basicInformation: The basic information of the user which includes age [required], weight[required], height [required], gender [required].
+      - lifestyle: The lifestyle of the user which includes daily routine and exercise routine [required], daily routine [optional].
+      - dietPreferences: The diet preferences of the user which includes preferences [required], allergies [required], intolerances, disliked food, favourite food.
+      - healthGoals: The health goals of the user which includes weight goal [required], specific nutrition goal [required], medical conditions [required].
+      - eatingHabits: The eating habits of the user which includes meals per day [required], meal complexity [optional], cooking time [optional].
+      - constraints: The constraints of the user which includes financial [required], geographical [optional].
+
+      The diet plan is created based on the information provided by the user.
+      `,
+    parameters: {
+      type: "object",
+      properties: {
+        basicInformation: {
+          type: "object",
+          peroperteis: {
+            age: { type: "number", description: "age of the user" },
+            weight: { type: "number", description: "weight of the user" },
+            height: { type: "number", description: "height of the user" },
+            gender: { type: "string", description: "gender of the user" },
+          },
+          lifeStyle: {
+            type: "object",
+            dailyRoutine: {
+              type: "string",
+              description: `
+                        The daily routine of the user which includes:
+                        - sedentary
+                        - light
+                        - moderate
+                        - heavy
+                        - very heavy
+                        `,
+            },
+            exerciseRoutine: {
+              type: "object",
+              properties: {
+                exerciseType: {
+                  type: "string",
+                  description:
+                    "The type of exercise that the user does, which can be of type 'cardio', 'strength', 'flexibility', 'balance', 'none'",
+                },
+                frequency: {
+                  type: "string",
+                  description:
+                    "The frequency of the exercise that the user does, which can be of type 'daily', 'weekly', 'monthly'",
+                },
+              },
+            },
+          },
+          dietPreferences: {
+            type: "object",
+            properties: {
+              preference: {
+                type: "string",
+                description:
+                  "The user's diet preference, which can be of type 'vegetarian', 'non-vegetarian', 'vegan', 'pescatarian', 'omnivore', 'ketogenic', 'paleo' ",
+              },
+              allergies: {
+                type: "array",
+                items: { type: "string" },
+                description: "an array of all the allergies that the user has",
+              },
+              intolerances: {
+                type: "array",
+                items: { type: "string" },
+                description:
+                  "an array of all the intolerances that the user has",
+              },
+              dislikedFood: {
+                type: "array",
+                items: { type: "string" },
+                description: "an arryay of all the food that the user dislikes",
+              },
+              favouriteFood: {
+                type: "array",
+                items: { type: "string" },
+                description: "an array of all the food that the user likes",
+              },
+            },
+          },
+          healthGoals: {
+            type: "object",
+            properties: {
+              weightGoal: {
+                type: "string",
+                description:
+                  "The user's weight goal, which can be of type 'gain', 'loss', 'maintain' ",
+              },
+              specificNutritionGoal: {
+                type: "string",
+                description: "The user's specific nutrition goal",
+              },
+              medicalConditions: {
+                type: "array",
+                items: { type: "string" },
+                description:
+                  "an array of all the medical conditions that the user has",
+              },
+            },
+          },
+          eatingHabits: {
+            type: "object",
+            properties: {
+              mealsPerDay: {
+                type: "number",
+                description: "The number of meals that the user has per day",
+              },
+              mealComplexity: {
+                type: "string",
+                description:
+                  "The complexity of the meals that the user has, which can be of type 'simple', 'moderate', 'complex' ",
+              },
+              cookingTime: {
+                type: "string",
+                description:
+                  "The cooking time of the user, which can be of type 'less than 30 minutes', '30-60 minutes', 'more than 60 minutes' ",
+              },
+            },
+          },
+          constraints: {
+            type: "object",
+            properties: {
+              financial: {
+                type: "object",
+                properties: {
+                  budget: { type: "number", description: "The user's budget" },
+                  budgetType: {
+                    type: "string",
+                    description:
+                      "The type of the user's budget, which can be of type 'daily', 'weekly', 'monthly' ",
+                  },
+                },
+              },
+              geographical: {
+                type: "object",
+                properties: {
+                  location: {
+                    type: "string",
+                    description:
+                      "The user's location so that food specific to that location can be added in the plan",
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  };
+  return createNutritionPlanSchema;
+};
 
 interface ISpecialGreetFunctionArguments {
   type: "specialGreet";
@@ -80,10 +336,10 @@ const currentWeatherFunctionDefinition = (): FunctionDefinition => {
 };
 
 // creates a new empty thread and returns it's id
-const createNewThread = async()=>{
-  const thread = await client.beta.threads.create()
-  return thread.id
-}
+const createNewThread = async () => {
+  const thread = await client.beta.threads.create();
+  return thread.id;
+};
 
 // creates a new assistant (this is just a sample), I used this function to create the core assistant, then hard coded the assistant id.
 const createNewAssistant = async () => {
@@ -102,16 +358,16 @@ const createNewAssistant = async () => {
 
 // returns a hard coded id of core assistant
 const getCoreAssistantId = (): string => {
-  const coreAssistantId= process.env.ASSISTANT_ID
+  const coreAssistantId = process.env.ASSISTANT_ID;
   if (coreAssistantId == undefined) {
     throw new Error("Thread id not provided");
   }
-  return coreAssistantId 
+  return coreAssistantId;
 };
 
 // returns a hard coded id of the thread
 const getThreadId = (): string => {
-  const threadId = process.env.THREAD_ID
+  const threadId = process.env.THREAD_ID;
   if (threadId == undefined) {
     throw new Error("Thread id not provided");
   }
@@ -150,6 +406,23 @@ const runFunction = async (functionArgument: IFunctionArgument) => {
     console.log("Funciton type is current weather");
     return currentWeather(functionArgument.location);
   }
+  if (functionArgument.type === "userPreferences") {
+    console.log("Function type is user preferences");
+    const basicInformation = functionArgument.basicInformation;
+    const lifeStyle = functionArgument.lifeStyle;
+    const dietPreferences = functionArgument.dietPreferences;
+    const healthGoals = functionArgument.healthGoals;
+    const eatingHabits = functionArgument.eatingHabits;
+    const constraints = functionArgument.constraints;
+    return createNutritionPlan(
+      basicInformation,
+      lifeStyle,
+      dietPreferences,
+      healthGoals,
+      eatingHabits,
+      constraints
+    );
+  }
   throw new Error(
     "Function argment type not matching with available functions"
   );
@@ -157,7 +430,8 @@ const runFunction = async (functionArgument: IFunctionArgument) => {
 
 type IFunctionArgument =
   | IWeatherFunctionArguments
-  | ISpecialGreetFunctionArguments;
+  | ISpecialGreetFunctionArguments
+  | IUserPreferences;
 
 // this function parses the function arguments from the tool call
 const parseFunctionArguments = (
@@ -177,7 +451,21 @@ const parseFunctionArguments = (
       type: "specialGreet",
       name: parsedData.name,
     };
-    console.log("check", functionArguments.type);
+    return functionArguments;
+  }
+  if (tool.function.name == "create_nutrition_plan") {
+    const parsedData = JSON.parse(tool.function.arguments);
+    console.log(chalk.bgRed("This is parsed data"), parsedData);
+    const functionArguments: IUserPreferences = {
+      type: "userPreferences",
+      basicInformation: parsedData.basicInformation,
+      lifeStyle: parsedData.lifeStyle,
+      dietPreferences: parsedData.dietPreferences,
+      healthGoals: parsedData.healthGoals,
+      eatingHabits: parsedData.eatingHabits,
+      constraints: parsedData.constraints,
+    };
+    console.log(chalk.bgGray("This is function arguments"), functionArguments);
     return functionArguments;
   }
   throw new Error("Error parsing function arguments");
@@ -223,6 +511,10 @@ const resopnsePoller = async (run: Run, thread: string): Promise<Message[]> => {
         throw new Error("Tool calls not provided");
       }
       console.log("following tools are needed", toolCalls);
+      console.log(
+        chalk.green("tools parameters", toolCalls[0].function.arguments)
+      );
+      console.log(chalk.cyan("tools name", toolCalls[0].function.name));
       // run the tools and generate aggregated outputs.
       const toolOutput = await runTools(toolCalls);
       console.log("Aggregated Output", toolOutput);
@@ -302,9 +594,12 @@ const getAssistant = async () => {
 
 async function main() {
   const messages = await createRun(
-    "I am a special person, greet me in a special way.and what is the weather in india"
+    "create a nutrition plan for me I am a 25 year old male, vegetarian, no allergies. I want to loose weight. I have a sedentary lifestyle. I eat 3 meals a day. I have a budget of 1000 dollars per month. I live in New York."
   );
   console.log("response", messages[0].content);
+  // console.log("Adding the plan generation tool to assistant")
+  // const createNutritionPlan = createNutritionPlanSchema()
+  // await addToolToAssistant(createNutritionPlan)
 }
 
 main();
